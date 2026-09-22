@@ -1,0 +1,171 @@
+.memoryStage {
+  position: relative;
+  z-index: 2;
+  grid-row: 1;
+  width: 100%;
+  min-height: 0;
+  padding: max(20px, env(safe-area-inset-top)) 20px 8px;
+  pointer-events: none;
+}
+
+.progress {
+  position: fixed;
+  bottom: max(1.65rem, calc(env(safe-area-inset-bottom) + .4rem));
+  left: 5.6rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: clamp(96px, 18vw, 170px);
+  padding: 4px 10px;
+  border-radius: 12px;
+  color: #ffe7ad;
+  background: rgb(15 25 19 / 80%);
+  font: 10px/1.2 Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress input {
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  accent-color: #e6c475;
+  cursor: pointer;
+}
+
+.progress input:focus-visible { outline: 2px solid #ffe49a; outline-offset: 3px; }
+.progress span span { opacity: .65; }
+
+.moment,
+.appearance {
+  height: 100%;
+  min-height: 0;
+}
+
+.moment {
+  transition: opacity 500ms ease;
+}
+
+.moment[data-leaving="true"] { opacity: 0; }
+
+.appearance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  animation: memory-arrive 650ms cubic-bezier(.2, .7, .3, 1) both;
+}
+
+.deck {
+  --frame-height: min(26svh, 240px);
+  --card-max: min(39vw, 430px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vw, 42px);
+  height: min(29svh, 275px);
+  width: 100%;
+  min-height: 0;
+}
+
+.card {
+  --tilt: -3deg;
+  --edge: 6px;
+  position: relative;
+  flex: 0 1 auto;
+  margin: 0;
+  width: min(calc(var(--frame-height) * var(--ratio) + 2 * var(--edge) + 2px), var(--card-max));
+  min-width: 0;
+  padding: var(--edge) var(--edge) 22px;
+  border: 1px solid rgb(255 234 181 / 60%);
+  border-radius: 3px;
+  background: linear-gradient(135deg, #fff8e9, #e6d5b6);
+  box-shadow: 0 12px 34px rgb(0 0 0 / 38%), 0 0 25px rgb(244 195 95 / 8%);
+  transform: rotate(var(--tilt));
+  animation: memory-float 8s ease-in-out infinite alternate;
+}
+
+.card:nth-child(2) { --tilt: 3deg; animation-delay: -3s; }
+
+.frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--ratio);
+  overflow: hidden;
+  background: #1c2220;
+}
+
+.media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heart {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  color: #9a7540;
+  font-family: Georgia, serif;
+  font-size: 19px;
+  line-height: 22px;
+  text-align: center;
+}
+
+.caption {
+  margin: 0;
+  color: #ffe7ad;
+  font-size: clamp(14px, 2.1svh, 20px);
+  line-height: 1.2;
+  letter-spacing: .035em;
+  text-shadow: 0 2px 8px #000;
+}
+
+.memoryStage[data-playing="false"] .appearance { animation: none; }
+.memoryStage[data-playing="false"] .card { animation-play-state: paused; }
+
+@keyframes memory-arrive {
+  from { opacity: 0; transform: translateY(12px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes memory-float {
+  from { transform: translateY(0) rotate(var(--tilt)); }
+  to { transform: translateY(-5px) rotate(calc(var(--tilt) + 1.2deg)); }
+}
+
+@media (max-width: 639px) {
+  .memoryStage { padding-inline: 14px; }
+  .deck { --frame-height: calc(28svh - 24px); --card-max: 41vw; height: 28svh; gap: 15px; }
+  .card { --edge: 4px; padding-bottom: 18px; }
+  .deck[data-count="1"] { --card-max: 72vw; }
+  .heart { font-size: 16px; line-height: 18px; }
+  .appearance { gap: 11px; }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .memoryStage {
+    position: absolute;
+    grid-row: auto;
+    inset: 3svh auto auto 3vw;
+    width: 29vw;
+    height: 65svh;
+    padding: 8px 0;
+  }
+  .deck { --frame-height: calc(43svh - 20px); --card-max: 25vw; height: 43svh; gap: 8px; }
+  .card { --edge: 3px; padding-bottom: 15px; }
+  .deck[data-count="2"] { --card-max: 13vw; }
+  .caption { font-size: 12px; text-align: center; }
+  .heart { font-size: 14px; line-height: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appearance,
+  .card { animation: none; }
+  .moment { transition: none; }
+}

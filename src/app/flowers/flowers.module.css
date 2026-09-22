@@ -1,11 +1,31 @@
 .stage {
   position: relative;
   isolation: isolate;
+  display: grid;
+  grid-template-rows: 40svh 27svh 33svh;
+  width: 100%;
+  min-height: 100svh;
+  overflow: hidden;
+  text-align: center;
 }
 
 .lyrics {
   position: relative;
   z-index: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(88%, 1240px);
+  min-height: 0;
+  margin-inline: auto;
+}
+
+.lyricText {
+  margin: 0;
+  font-size: min(6.7vw, 8.4svh, 6.75rem);
+  line-height: .95;
+  text-wrap: balance;
 }
 
 .musicButton {
@@ -233,6 +253,9 @@
 }
 
 @media (max-width: 639px) {
+  .lyrics { width: calc(100% - 28px); }
+  .lyricText { font-size: min(9vw, 6svh, 3rem); line-height: 1; }
+
   .flowerBed {
     bottom: -24px;
     height: clamp(190px, 32svh, 290px);
@@ -255,8 +278,22 @@
   .flowerBed { height: 180px; }
 }
 
+@media (max-height: 500px) and (orientation: landscape) {
+  .lyrics {
+    position: absolute;
+    grid-row: auto;
+    top: 10svh;
+    right: 4vw;
+    width: 60vw;
+    height: 57svh;
+  }
+  .lyricText { font-size: min(5vw, 9svh); }
+  .flowerBed { height: 35svh; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .musicButton { transition: none; }
+  .lyricText { animation: none; }
 
   .garden,
   .stem,

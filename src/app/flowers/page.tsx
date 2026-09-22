@@ -2,6 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import YellowGarden from "./yellow-garden";
+import MemoryScene from "./memory-scene";
+import SongProgress from "./song-progress";
+import {
+  getMemoryIndex,
+  memoryTimeline,
+  MEMORY_FADE_SECONDS,
+  SONG_SYNC_OFFSET_SECONDS,
+} from "./memory-timeline";
 import styles from "./flowers.module.css";
 
 type Lyric = {
@@ -53,8 +61,6 @@ const lyrics: Lyric[] = [
   { start: 191.6, text: "Oh, no te vaya'" },
 ];
 
-const SYNC_LEAD_SECONDS = 0.18;
-
 function renderLyric({ text, accent }: Lyric) {
   if (!accent) return <span className="lyrics-plain">{text}</span>;
 
@@ -92,6 +98,7 @@ export default function FlowersPage() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentLyric, setCurrentLyric] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [memory, setMemory] = useState({ index: -1, nextIndex: 0, leaving: false });
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -100,28 +107,51 @@ export default function FlowersPage() {
     let animationFrame = 0;
 
     const refreshLyric = () => {
-      const synchronizedTime = audio.currentTime + SYNC_LEAD_SECONDS;
+      // Lyrics and memories share one clock so cards change on the same
+      // vocal attack as the line displayed in the centre.
+      const synchronizedTime = audio.currentTime + SONG_SYNC_OFFSET_SECONDS;
       const nextLyric = lyrics.reduce(
         (currentIndex, lyric, index) => (synchronizedTime >= lyric.start ? index : currentIndex),
         0,
       );
 
       setCurrentLyric((currentIndex) => (currentIndex === nextLyric ? currentIndex : nextLyric));
+
+      // The value still comes from the audio element, so pauses, buffering
+      // and seeking never accumulate drift; it simply uses the same lead as
+      // the lyrics above.
+      const index = getMemoryIndex(synchronizedTime);
+      const cue = memoryTimeline[index];
+      const leaving = Boolean(cue && synchronizedTime >= cue.end - MEMORY_FADE_SECONDS);
+      const nextIndex = index >= 0 ? index + 1 : memoryTimeline.findIndex((entry) => entry.start > synchronizedTime);
+      setMemory((previous) => previous.index === index && previous.leaving === leaving && previous.nextIndex === nextIndex
+        ? previous
+        : { index, nextIndex, leaving });
     };
 
     const updateLyric = () => {
       refreshLyric();
-      animationFrame = requestAnimationFrame(updateLyric);
+      if (!audio.paused && !audio.ended && !document.hidden) {
+        animationFrame = requestAnimationFrame(updateLyric);
+      }
     };
 
-    audio.addEventListener("loadedmetadata", refreshLyric);
-    refreshLyric();
-    updateLyric();
+    const syncClock = () => {
+      cancelAnimationFrame(animationFrame);
+      updateLyric();
+    };
+    const events = ["loadedmetadata", "play", "pause", "seeked", "ended"];
+    events.forEach((event) => audio.addEventListener(event, syncClock));
+    audio.addEventListener("timeupdate", refreshLyric);
+    document.addEventListener("visibilitychange", syncClock);
+    syncClock();
     void audio.play().catch(() => setIsPlaying(false));
 
     return () => {
       audio.pause();
-      audio.removeEventListener("loadedmetadata", refreshLyric);
+      events.forEach((event) => audio.removeEventListener(event, syncClock));
+      audio.removeEventListener("timeupdate", refreshLyric);
+      document.removeEventListener("visibilitychange", syncClock);
       cancelAnimationFrame(animationFrame);
     };
   }, []);
@@ -150,16 +180,17 @@ export default function FlowersPage() {
       />
 
       <main
-        className={`${styles.stage} flex min-h-[100svh] w-full items-center justify-center overflow-hidden px-4 py-12 text-center sm:px-6 sm:py-16`}
+        className={styles.stage}
         data-playing={isPlaying}
         aria-label="Letra sincronizada de Yoko de Álvaro Díaz"
       >
         <YellowGarden />
+        <MemoryScene index={memory.index} nextIndex={memory.nextIndex} leaving={memory.leaving} isPlaying={isPlaying} audioRef={audioRef} />
         <div key={`glow-${currentLyric}`} className={styles.lyricGlow} aria-hidden="true" />
-        <div className={`${styles.lyrics} w-full max-w-7xl`} aria-live="polite">
+        <div className={styles.lyrics} aria-live="polite">
           <p
             key={lyrics[currentLyric].start}
-            className="lyrics-display lyrics-enter break-words text-[clamp(2.5rem,10vw,9rem)] leading-[0.88] uppercase text-white/80"
+            className={`${styles.lyricText} lyrics-display lyrics-enter break-words uppercase text-white/80`}
           >
             {renderLyric(lyrics[currentLyric])}
           </p>
@@ -183,6 +214,7 @@ export default function FlowersPage() {
           </svg>
         )}
       </button>
+      <SongProgress audioRef={audioRef} />
     </>
   );
 }
