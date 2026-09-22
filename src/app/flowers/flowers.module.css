@@ -1,0 +1,279 @@
+.stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.lyrics {
+  position: relative;
+  z-index: 2;
+}
+
+.musicButton {
+  position: fixed;
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  left: 1.25rem;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 1px solid rgb(255 220 119 / 55%);
+  border-radius: 50%;
+  color: #fff0bb;
+  background: linear-gradient(145deg, rgb(73 61 33 / 92%), rgb(18 28 22 / 95%));
+  box-shadow: inset 0 1px 0 rgb(255 236 171 / 15%), 0 4px 24px rgb(0 0 0 / 30%);
+  cursor: pointer;
+  transition: transform 200ms ease, border-color 200ms ease;
+}
+
+.musicButton:hover {
+  transform: translateY(-2px);
+  border-color: #ffe49a;
+}
+
+.musicButton:focus-visible {
+  outline: 2px solid #ffe49a;
+  outline-offset: 4px;
+}
+
+.garden {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+  animation: garden-arrive 1.8s ease-out both;
+}
+
+.definitions {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.horizon {
+  position: absolute;
+  inset: 45% 0 0;
+  background:
+    radial-gradient(ellipse at 8% 100%, rgb(229 169 33 / 16%), transparent 55%),
+    radial-gradient(ellipse at 93% 100%, rgb(238 185 49 / 18%), transparent 55%),
+    linear-gradient(transparent 20%, rgb(12 24 17 / 60%) 75%, #0d1914);
+}
+
+.sunlight {
+  position: absolute;
+  inset: 35% -10% -15%;
+  background:
+    radial-gradient(ellipse at 13% 65%, rgb(255 196 60 / 13%), transparent 30%),
+    radial-gradient(ellipse at 85% 65%, rgb(255 216 106 / 16%), transparent 33%);
+  animation: sunlight-breathe 10s ease-in-out infinite alternate;
+}
+
+.flowerBed {
+  position: absolute;
+  bottom: -38px;
+  width: 100%;
+  height: clamp(240px, 42svh, 440px);
+}
+
+.flower {
+  position: absolute;
+  bottom: 0;
+  left: var(--x);
+  height: calc(100% * var(--size));
+  aspect-ratio: 160 / 410;
+  transform: translateX(-50%) rotate(var(--lean));
+  transform-origin: 50% 100%;
+}
+
+.distant {
+  opacity: 0.5;
+  filter: saturate(0.7);
+}
+
+.stem {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 50% 100%;
+  animation: flower-sway var(--duration) ease-in-out var(--delay) infinite alternate;
+}
+
+.sprig,
+.grass {
+  position: absolute;
+  bottom: 0;
+  left: var(--x);
+  height: 95%;
+  overflow: visible;
+  transform-origin: 50% 100%;
+  animation: foliage-sway var(--duration) ease-in-out var(--delay) infinite alternate;
+}
+
+.sprig {
+  opacity: 0.75;
+}
+
+.foreground {
+  position: absolute;
+  bottom: -14px;
+  width: 100%;
+  height: clamp(220px, 32svh, 340px);
+  mask-image: linear-gradient(transparent 30%, #000 75%);
+}
+
+.grass {
+  opacity: 0.85;
+}
+
+.fireflies,
+.petals {
+  position: absolute;
+  inset: 0;
+}
+
+.petalPath {
+  position: absolute;
+  left: var(--x);
+  bottom: var(--y);
+  animation: petal-drift var(--duration) linear var(--delay) infinite;
+  opacity: 0;
+}
+
+.petal {
+  display: block;
+  width: 11px;
+  height: 19px;
+  border-radius: 90% 12% 85% 18%;
+  background: linear-gradient(135deg, #fff0a0, #eab42a 55%, #b77b1e);
+  box-shadow: inset 1px 1px 1px rgb(255 247 175 / 65%);
+  animation: petal-turn 5s ease-in-out var(--delay) infinite alternate;
+}
+
+.firefly {
+  position: absolute;
+  left: var(--x);
+  bottom: var(--y);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff3b0;
+  box-shadow: 0 0 8px 2px rgb(255 210 73 / 45%);
+  opacity: 0;
+  animation: firefly-drift var(--duration) ease-in-out var(--delay) infinite;
+}
+
+/* A single soft flash per lyric uses the existing lyric clock, not an audio analyser. */
+.lyricGlow {
+  position: fixed;
+  inset: 55% 0 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgb(255 208 69 / 16%), transparent 70%);
+  opacity: 0;
+  animation: lyric-glow 2.8s ease-out both;
+}
+
+.stage[data-playing="false"] .stem,
+.stage[data-playing="false"] .sprig,
+.stage[data-playing="false"] .grass,
+.stage[data-playing="false"] .sunlight,
+.stage[data-playing="false"] .petalPath,
+.stage[data-playing="false"] .petal,
+.stage[data-playing="false"] .firefly,
+.stage[data-playing="false"] .lyricGlow {
+  animation-play-state: paused;
+}
+
+@keyframes sunlight-breathe {
+  from { opacity: 0.45; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1.03); }
+}
+
+@keyframes foliage-sway {
+  from { transform: translateX(-50%) rotate(var(--lean)); }
+  to { transform: translateX(-50%) rotate(calc(var(--lean) + 5deg)); }
+}
+
+@keyframes petal-drift {
+  0% { opacity: 0; transform: translate3d(0, 25px, 0); }
+  15% { opacity: 0.6; }
+  70% { opacity: 0.5; }
+  100% { opacity: 0; transform: translate3d(var(--drift), -230px, 0); }
+}
+
+@keyframes petal-turn {
+  from { transform: rotate(-35deg) scaleX(0.65); }
+  to { transform: rotate(130deg) scaleX(1); }
+}
+
+@keyframes flower-sway {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3deg); }
+}
+
+@keyframes firefly-drift {
+  0%, 100% { opacity: 0; transform: translate3d(0, 16px, 0); }
+  25% { opacity: 0.65; }
+  65% { opacity: 0.4; }
+  90% { opacity: 0; transform: translate3d(24px, -70px, 0); }
+}
+
+@keyframes garden-arrive {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lyric-glow {
+  0%, 100% { opacity: 0; }
+  25% { opacity: 1; }
+}
+
+@media (max-width: 639px) {
+  .flowerBed {
+    bottom: -24px;
+    height: clamp(190px, 32svh, 290px);
+  }
+
+  .flower.mobileHidden,
+  .sprig:nth-child(3),
+  .sprig:nth-child(4),
+  .grass:nth-child(2n),
+  .petalPath:nth-child(n + 4),
+  .firefly:nth-child(n + 7) {
+    display: none;
+  }
+
+  .foreground { height: 220px; }
+  .petal { width: 8px; height: 14px; }
+}
+
+@media (max-height: 500px) and (min-width: 640px) {
+  .flowerBed { height: 180px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .musicButton { transition: none; }
+
+  .garden,
+  .stem,
+  .sprig,
+  .grass,
+  .sunlight,
+  .petalPath,
+  .petal,
+  .firefly,
+  .lyricGlow {
+    animation: none;
+  }
+
+  .sprig,
+  .grass { transform: translateX(-50%) rotate(var(--lean)); }
+
+  .firefly,
+  .petals,
+  .lyricGlow { display: none; }
+}
